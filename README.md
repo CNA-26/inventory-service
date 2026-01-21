@@ -6,6 +6,9 @@
 npm run dev
 ```
 
+- API: http://localhost:3000/api
+- Swagger Documentation: http://localhost:3000
+
 ## Build and run
 
 ```sh
