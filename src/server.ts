@@ -1,17 +1,6 @@
-import express from "express";
-import router from "./router";
-import swagger from "./swagger";
-const server = express();
+import app from "./app";
+import config from "./config/config";
 
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.SERVER_HOST || "localhost";
-const PROTOCOL = process.env.PROTOCOL || "http";
-
-export const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
-
-server.use("/api", router);
-swagger(server);
-
-server.listen(PORT, () => {
-  console.log(`Swagger UI available at ${BASE_URL}/`);
+app.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`);
 });
