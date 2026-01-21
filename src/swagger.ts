@@ -8,13 +8,8 @@ const options = {
       version: "1.0.0",
       description: "API documentation for the Inventory Service",
     },
-    servers: [
-      {
-        url: "http://localhost:3000",
-      },
-    ],
   },
-  apis: ["./routes/*.ts"],
+  apis: ["src/routes/*.ts"],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
