@@ -13,5 +13,5 @@ server.use("/api", router);
 swagger(server);
 
 server.listen(PORT, () => {
-  console.log(`Server is running at ${BASE_URL}`);
+  console.log(`Swagger UI available at ${BASE_URL}/`);
 });
