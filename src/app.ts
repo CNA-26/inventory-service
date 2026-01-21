@@ -1,13 +1,16 @@
 import express from "express";
+import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middlewares/errorHandler";
-import itemRoutes from "./routes/itemRoutes";
+import router from "./router";
+import swaggerSpec from "./swagger";
 
 const app = express();
 
 app.use(express.json());
 
 // Routes
-app.use("/api/items", itemRoutes);
+app.use("/api", router);
+app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Global error handler (should be after routes)
 app.use(errorHandler);
