@@ -2,7 +2,7 @@
 
 ## Deployed version
 
-- API https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/api
+- API https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/api/
 - Swagger Documentation: https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/
 
 ## Local development
