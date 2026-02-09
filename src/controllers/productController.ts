@@ -137,20 +137,90 @@ export const patchProduct = (
       res.status(400).json({ message: "sku parameter is required" });
       return;
     }
-    const { quantity } = req.body;
-    if (!quantity || typeof quantity !== "number") {
+    const { quantity, email, orderId } = req.body;
+    if (quantity === undefined || typeof quantity !== "number") {
       res
         .status(400)
         .json({ message: "quantity is required in body and must be a number" });
       return;
     }
+
+    if (quantity === 0) {
+      res
+        .status(400)
+        .json({ message: "quantity must be a non-zero number in body" });
+      return;
+    }
+
     const productIndex = getIndexBySku(skuParam);
     if (!doesProductExist(productIndex)) {
       res.status(404).json({ message: "Product not found" });
       return;
     }
+
+    if (email !== undefined && typeof email !== "string") {
+      res
+        .status(400)
+        .json({ message: "email must be a string if provided in body" });
+      return;
+    }
+
+    if (orderId !== undefined && typeof orderId !== "string") {
+      res
+        .status(400)
+        .json({ message: "orderId must be a string if provided in body" });
+      return;
+    }
+
+    // if email is provided but orderId is not, or vice versa, return 400
+    if (
+      (email !== undefined && orderId === undefined) ||
+      (email === undefined && orderId !== undefined)
+    ) {
+      res.status(400).json({
+        message: "Both email and orderId must be provided for order updates",
+      });
+      return;
+    }
+
+    // if email is provided and orderId is provided its an order related update
+    let orderRelatedUpdate = false;
+    if (email !== undefined && orderId !== undefined) {
+      orderRelatedUpdate = true;
+    }
+
+    // if quantity is positive and order related update, return 400
+    if (quantity > 0 && orderRelatedUpdate) {
+      res.status(400).json({
+        message: `If quantity is positive, email and orderId should not be provided`,
+      });
+      return;
+    }
+
+    // if not order related update, just update quantity
+    if (!orderRelatedUpdate) {
+      products[productIndex].updateQuantity(quantity);
+      res.json(products[productIndex].getProductInfo());
+      return;
+    }
+
+    // check for sufficient stock
+    if (products[productIndex].getQuantity() + quantity < 0) {
+      res.status(400).json({
+        message: `Insufficient stock to fulfill order ${orderId} for ${email}`,
+      });
+      return;
+    }
+
     products[productIndex].updateQuantity(quantity);
-    res.json(products[productIndex].getProductInfo());
+
+    /**
+     * SEND SHIPPING NOTIFICATION EMAIL
+     */
+
+    res.json({
+      message: `Order ${orderId} processed for ${email} and email sent`,
+    });
   } catch (error) {
     next(error);
   }

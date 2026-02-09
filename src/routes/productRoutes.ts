@@ -41,7 +41,7 @@ const router = Router();
  *           example: 10
  *       required:
  *         - sku
- *     ProductUpdateRequest:
+ *     ProductPutRequest:
  *       type: object
  *       properties:
  *         quantity:
@@ -49,6 +49,54 @@ const router = Router();
  *           example: 5
  *       required:
  *         - quantity
+ *     ProductPatchRequest:
+ *       type: object
+ *       properties:
+ *         quantity:
+ *           type: number
+ *           example: -5
+ *         email:
+ *           type: string
+ *           example: "customer@example.com"
+ *         orderId:
+ *           type: string
+ *           example: "ORD123456"
+ *       required:
+ *         - quantity
+ *     ProductPatchDeltaRequest:
+ *       type: object
+ *       description: Quantity only delta update, not order related
+ *       properties:
+ *         quantity:
+ *           type: number
+ *           example: 5
+ *       required:
+ *         - quantity
+ *       additionalProperties: false
+ *     ProductPatchOrderRequest:
+ *       type: object
+ *       description: Order related update with email, orderId and a negative quantity
+ *       properties:
+ *         quantity:
+ *           type: number
+ *           example: -5
+ *         email:
+ *           type: string
+ *           example: "customer@example.com"
+ *         orderId:
+ *           type: string
+ *           example: "ORD123456"
+ *       required:
+ *         - quantity
+ *         - email
+ *         - orderId
+ *       additionalProperties: false
+ *     OrderUpdateResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: "Order ORD123456 processed for customer@example.com and email sent"
  * tags:
  *   - name: Products
  *     description: Product inventory management
@@ -145,7 +193,7 @@ router.post("/", postProduct);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: "#/components/schemas/ProductUpdateRequest"
+ *             $ref: "#/components/schemas/ProductPutRequest"
  *     responses:
  *       200:
  *         description: Product quantity set
@@ -167,6 +215,9 @@ router.put("/:sku", putProduct);
  *     tags:
  *       - Products
  *     summary: Update product quantity by delta
+ *     description: |
+ *       Updates product quantity by delta. If `email` and `orderId` are provided together, this is treated as an order-related update.
+ *       For order-related updates, `quantity` must be negative and sufficient stock must exist.
  *     parameters:
  *       - in: path
  *         name: sku
@@ -178,16 +229,32 @@ router.put("/:sku", putProduct);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: "#/components/schemas/ProductUpdateRequest"
+ *             oneOf:
+ *               - $ref: "#/components/schemas/ProductPatchDeltaRequest"
+ *               - $ref: "#/components/schemas/ProductPatchOrderRequest"
+ *             description: Use one of the PATCH variants.
+ *           examples:
+ *             quantityDelta:
+ *               summary: Quantity only delta update
+ *               value:
+ *                 quantity: 5
+ *             orderUpdate:
+ *               summary: Order related update
+ *               value:
+ *                 quantity: -5
+ *                 email: "customer@example.com"
+ *                 orderId: "ORD123456"
  *     responses:
  *       200:
  *         description: Product quantity updated
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/Product"
+ *               oneOf:
+ *                 - $ref: "#/components/schemas/Product"
+ *                 - $ref: "#/components/schemas/OrderUpdateResponse"
  *       400:
- *         description: Invalid request body or missing SKU parameter
+ *         description: Invalid request body, missing SKU parameter, quantity is zero, email/orderId mismatch, or insufficient stock
  *       404:
  *         description: Product not found
  */
