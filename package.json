@@ -22,6 +22,12 @@
     "url": "https://github.com/CNA-26/inventory-service/issues"
   },
   "homepage": "https://github.com/CNA-26/inventory-service#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
@@ -30,9 +36,10 @@
     "@types/node": "^25.0.9",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
-    "dotenv": "^17.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/parser": "^8.53.1",
     "eslint": "^9.39.2",
-    "express": "^5.2.1",
+    "eslint-config-prettier": "^10.1.8",
     "globals": "^17.0.0",
     "install": "^0.13.0",
     "jest": "^30.2.0",
@@ -42,12 +49,5 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "@typescript-eslint/parser": "^8.53.1",
-    "eslint-config-prettier": "^10.1.8",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
   }
 }
