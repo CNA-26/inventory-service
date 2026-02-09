@@ -3,7 +3,7 @@
 ## Deployed version
 
 - API https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/api/
-- Swagger Documentation: https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/
+- Swagger Documentation: https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/docs
 
 ## Local development
 
@@ -12,7 +12,7 @@ npm run dev
 ```
 
 - API: http://localhost:3000/api
-- Swagger Documentation: http://localhost:3000
+- Swagger Documentation: http://localhost:3000/docs
 
 ## Build and run
 

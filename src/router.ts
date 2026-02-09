@@ -1,8 +1,7 @@
 import express from "express";
-import itemRoutes from "./routes/itemRoutes";
+import productRoutes from "./routes/productRoutes";
 
 const router = express.Router();
 
-router.use("/items", itemRoutes);
-
+router.use("/products", productRoutes);
 export default router;

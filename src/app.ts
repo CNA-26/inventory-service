@@ -10,7 +10,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api", router);
-app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Global error handler (should be after routes)
 app.use(errorHandler);
