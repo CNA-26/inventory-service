@@ -117,4 +117,79 @@ describe("patchProduct", () => {
       message: "quantity must be a non-zero number in body",
     });
   });
+
+  it("should return 400 if email and orderId are provided but quantity is zero", () => {
+    const req = {
+      params: { sku: "TESTSKU" },
+      body: { quantity: 0, email: "test@example.com", orderId: "ORDER123" },
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    products.push(new Product("TESTSKU", 10));
+
+    patchProduct(req, res, jest.fn());
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "quantity must be a non-zero number in body",
+    });
+  });
+
+  it("should return 400 if email and orderId are provided but quantity is positive", () => {
+    const req = {
+      params: { sku: "TESTSKU" },
+      body: { quantity: 5, email: "test@example.com", orderId: "ORDER123" },
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    products.push(new Product("TESTSKU", 10));
+
+    patchProduct(req, res, jest.fn());
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message:
+        "If quantity is positive, email and orderId should not be provided",
+    });
+  });
+  it("should return 400 if only email is provided with negative quantity", () => {
+    const req = {
+      params: { sku: "TESTSKU" },
+      body: { quantity: -5, email: "test@example.com" },
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    products.push(new Product("TESTSKU", 10));
+
+    patchProduct(req, res, jest.fn());
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Both email and orderId must be provided for order updates",
+    });
+  });
+
+  it("should send shipping notification email and return 200 for valid order update", () => {
+    const req = {
+      params: { sku: "TESTSKU" },
+      body: { quantity: -5, email: "test@example.com", orderId: "ORDER123" },
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    products.push(new Product("TESTSKU", 10));
+
+    patchProduct(req, res, jest.fn());
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Order ORDER123 processed for test@example.com and email sent",
+    });
+  });
 });
