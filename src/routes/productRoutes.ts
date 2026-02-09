@@ -187,7 +187,7 @@ router.put("/:sku", putProduct);
  *             schema:
  *               $ref: "#/components/schemas/Product"
  *       400:
- *         description: Invalid request body or missing SKU parameter
+ *         description: Invalid request body, missing SKU parameter, or quantity is zero
  *       404:
  *         description: Product not found
  */

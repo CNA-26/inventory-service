@@ -98,4 +98,23 @@ describe("patchProduct", () => {
       message: "sku parameter is required",
     });
   });
+
+  it("should return 400 if quantity is zero", () => {
+    const req = {
+      params: { sku: "TESTSKU" },
+      body: { quantity: 0 },
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    products.push(new Product("TESTSKU", 10));
+
+    patchProduct(req, res, jest.fn());
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "quantity must be a non-zero number in body",
+    });
+  });
 });

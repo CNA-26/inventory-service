@@ -138,12 +138,20 @@ export const patchProduct = (
       return;
     }
     const { quantity } = req.body;
-    if (!quantity || typeof quantity !== "number") {
+    if (quantity === undefined || typeof quantity !== "number") {
       res
         .status(400)
         .json({ message: "quantity is required in body and must be a number" });
       return;
     }
+
+    if (quantity === 0) {
+      res
+        .status(400)
+        .json({ message: "quantity must be a non-zero number in body" });
+      return;
+    }
+
     const productIndex = getIndexBySku(skuParam);
     if (!doesProductExist(productIndex)) {
       res.status(404).json({ message: "Product not found" });
