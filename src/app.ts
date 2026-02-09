@@ -1,6 +1,6 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import { errorHandler } from "./middlewares/errorHandler";
+import { AppError, errorHandler } from "./middlewares/errorHandler";
 import router from "./router";
 import swaggerSpec from "./swagger";
 
@@ -11,7 +11,7 @@ app.use(express.json());
 // Custom JSON parsing error handler
 app.use(
   (
-    err: any,
+    err: AppError,
     req: express.Request,
     res: express.Response,
     next: express.NextFunction,
@@ -27,6 +27,12 @@ app.use(
 // Routes
 app.use("/api", router);
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/", (req, res) => {
+  res.json({
+    message:
+      "If you are seeing this message the server is running. Please refer to /docs for API documentation.",
+  });
+});
 
 // Global error handler (should be after routes)
 app.use(errorHandler);
