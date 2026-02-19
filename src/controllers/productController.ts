@@ -1,29 +1,18 @@
 import { NextFunction, Request, Response } from "express";
-import { Product, products } from "../models/product";
+import { Product } from "../models/product";
 
 /**
- * Returns the index of a product in the products array based on its sku.
- * @param sku string sku of the product to find
- * @returns number index of the product in the products array, or -1 if not found
+ * Checks if a product exists by sku.
+ * @param sku string sku of the product to check
+ * @returns Promise<boolean> indicating whether the product exists
  */
-const getIndexBySku = (sku: string): number => {
-  return products.findIndex((p) => p.getSku() === sku);
-};
-
-/**
- * Checks if a product exists by either sku or index.
- * @param input string sku or number index to check for existence
- * @returns boolean indicating whether the product exists
- */
-const doesProductExist = (input: string | number): boolean => {
-  if (typeof input === "string") {
-    return getIndexBySku(input) !== -1;
-  }
-  return input !== -1;
+const doesProductExist = async (sku: string): Promise<boolean> => {
+  const product = await Product.findBySku(sku);
+  return product !== null;
 };
 
 // Create a product
-export const postProduct = (
+export const postProduct = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -43,13 +32,12 @@ export const postProduct = (
       return;
     }
 
-    if (doesProductExist(sku)) {
+    if (await doesProductExist(sku)) {
       res.status(409).json({ message: "Product with this sku already exists" });
       return;
     }
 
-    const newProduct = new Product(sku, quantity ? quantity : 0);
-    products.push(newProduct);
+    const newProduct = await Product.create(sku, quantity || 0);
     res.status(201).json(newProduct.getProductInfo());
   } catch (error) {
     next(error);
@@ -57,12 +45,13 @@ export const postProduct = (
 };
 
 // Get all products
-export const getProducts = (
+export const getProducts = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
+    const products = await Product.findAll();
     res.json(products.map((product) => product.getProductInfo()));
   } catch (error) {
     next(error);
@@ -70,7 +59,7 @@ export const getProducts = (
 };
 
 // Get single product
-export const getProductBySku = (
+export const getProductBySku = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -83,19 +72,19 @@ export const getProductBySku = (
       res.status(400).json({ message: "sku parameter is required" });
       return;
     }
-    const productIndex = getIndexBySku(skuParam);
-    if (!doesProductExist(productIndex)) {
+    const product = await Product.findBySku(skuParam);
+    if (!product) {
       res.status(404).json({ message: "Product not found" });
       return;
     }
-    res.json(products[productIndex].getProductInfo());
+    res.json(product.getProductInfo());
   } catch (error) {
     next(error);
   }
 };
 
 // set quantity of a product
-export const putProduct = (req: Request, res: Response, next: NextFunction) => {
+export const putProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const skuParam = Array.isArray(req.params.sku)
       ? req.params.sku[0]
@@ -111,20 +100,21 @@ export const putProduct = (req: Request, res: Response, next: NextFunction) => {
         .json({ message: "quantity is required in body and must be a number" });
       return;
     }
-    const productIndex = getIndexBySku(skuParam);
-    if (!doesProductExist(productIndex)) {
+    const product = await Product.findBySku(skuParam);
+    if (!product) {
       res.status(404).json({ message: "Product not found" });
       return;
     }
-    products[productIndex].setQuantity(quantity);
-    res.json(products[productIndex].getProductInfo());
+    product.setQuantity(quantity);
+    await product.update();
+    res.json(product.getProductInfo());
   } catch (error) {
     next(error);
   }
 };
 
 // update quantity of a product
-export const patchProduct = (
+export const patchProduct = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -152,8 +142,8 @@ export const patchProduct = (
       return;
     }
 
-    const productIndex = getIndexBySku(skuParam);
-    if (!doesProductExist(productIndex)) {
+    const product = await Product.findBySku(skuParam);
+    if (!product) {
       res.status(404).json({ message: "Product not found" });
       return;
     }
@@ -199,20 +189,22 @@ export const patchProduct = (
 
     // if not order related update, just update quantity
     if (!orderRelatedUpdate) {
-      products[productIndex].updateQuantity(quantity);
-      res.json(products[productIndex].getProductInfo());
+      product.setQuantity(product.getQuantity() + quantity);
+      await product.update();
+      res.json(product.getProductInfo());
       return;
     }
 
     // check for sufficient stock
-    if (products[productIndex].getQuantity() + quantity < 0) {
+    if (product.getQuantity() + quantity < 0) {
       res.status(400).json({
         message: `Insufficient stock to fulfill order ${orderId} for ${email}`,
       });
       return;
     }
 
-    products[productIndex].updateQuantity(quantity);
+    product.setQuantity(product.getQuantity() + quantity);
+    await product.update();
 
     /**
      * SEND SHIPPING NOTIFICATION EMAIL
