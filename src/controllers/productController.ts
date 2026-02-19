@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Product, products } from "../models/product";
+import { sendShippingEmail } from "../services/emailService";
+
 
 /**
  * Returns the index of a product in the products array based on its sku.
@@ -124,7 +126,7 @@ export const putProduct = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // update quantity of a product
-export const patchProduct = (
+export const patchProduct = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -214,9 +216,17 @@ export const patchProduct = (
 
     products[productIndex].updateQuantity(quantity);
 
-    /**
-     * SEND SHIPPING NOTIFICATION EMAIL
-     */
+   
+
+// Sending shipping notification email, order succeeds even if email service is offline
+sendShippingEmail(
+  email,
+  orderId,
+  `trackingNumber-${orderId}`
+).catch((err) =>
+  console.error("Email failed but order processed", err)
+);
+
 
     res.json({
       message: `Order ${orderId} processed for ${email} and email sent`,
