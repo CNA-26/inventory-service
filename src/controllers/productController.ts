@@ -39,8 +39,8 @@ export const postProduct = async (
         return;
       }
       const qty = quantity !== undefined ? quantity : 0;
-      const p = new Product(sku, qty);
-      inMemoryProducts.push(p as any);
+  const p = new Product(sku, qty);
+  inMemoryProducts.push(p);
       res.status(201).json(p.getProductInfo());
       return;
     }
