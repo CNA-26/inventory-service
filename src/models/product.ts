@@ -13,6 +13,13 @@ export type ProductInfo = {
   updatedAt: string;
 };
 
+export type DbRow = {
+  id: number;
+  sku: string;
+  quantity: number;
+  updated_at: string | Date;
+};
+
 export class Product implements ProductInterface {
   private id: number;
   private quantity: number;
@@ -67,7 +74,7 @@ export class Product implements ProductInterface {
   static async findAll(): Promise<Product[]> {
     const query = "SELECT id, sku, quantity, updated_at FROM products ORDER BY id";
     const result = await pool.query(query);
-    return result.rows.map((row: any) => new Product(row.id, row.sku, row.quantity, row.updated_at));
+    return result.rows.map((row: DbRow) => new Product(row.id, row.sku, row.quantity, new Date(row.updated_at)));
   }
 
   static async findBySku(sku: string): Promise<Product | null> {
@@ -77,14 +84,14 @@ export class Product implements ProductInterface {
       return null;
     }
     const row = result.rows[0];
-    return new Product(row.id, row.sku, row.quantity, row.updated_at);
+    return new Product(row.id, row.sku, row.quantity, new Date(row.updated_at));
   }
 
   static async create(sku: string, quantity: number = 0): Promise<Product> {
     const query = "INSERT INTO products (sku, quantity) VALUES ($1, $2) RETURNING id, sku, quantity, updated_at";
     const result = await pool.query(query, [sku, quantity]);
     const row = result.rows[0];
-    return new Product(row.id, row.sku, row.quantity, row.updated_at);
+    return new Product(row.id, row.sku, row.quantity, new Date(row.updated_at));
   }
 
   async update(): Promise<void> {
