@@ -26,11 +26,25 @@ export class Product implements ProductInterface {
   private sku: string;
   private updatedAt: Date;
 
-  constructor(id: number, sku: string, quantity: number, updatedAt: Date) {
-    this.id = id;
-    this.quantity = quantity;
-    this.sku = sku;
-    this.updatedAt = updatedAt;
+  // Support two constructor shapes:
+  // - DB-backed: new Product(id: number, sku: string, quantity: number, updatedAt: Date)
+  // - In-memory (tests): new Product(sku: string, quantity: number)
+  constructor(id: number, sku: string, quantity: number, updatedAt: Date);
+  constructor(sku: string, quantity: number);
+  constructor(a: number | string, b: string | number, c?: number, d?: Date) {
+    if (typeof a === "number") {
+      // DB-backed signature
+      this.id = a;
+      this.sku = b as string;
+      this.quantity = c as number;
+      this.updatedAt = d as Date;
+    } else {
+      // In-memory signature (tests)
+      this.id = -1;
+      this.sku = a;
+      this.quantity = (typeof b === "number" ? b : 0) as number;
+      this.updatedAt = new Date();
+    }
   }
 
   getQuantity(): number {
@@ -47,6 +61,12 @@ export class Product implements ProductInterface {
 
   setQuantity(quantity: number): void {
     this.quantity = quantity;
+    this.updatedAt = new Date();
+  }
+
+  // Tests expect an updateQuantity(delta) method
+  updateQuantity(delta: number): void {
+    this.quantity += delta;
     this.updatedAt = new Date();
   }
 
@@ -116,3 +136,7 @@ export class Product implements ProductInterface {
     }
   }
 }
+
+// Minimal in-memory products collection (test shim).
+// Kept intentionally small so CI/tests that rely on a `products` import keep working.
+export const products: Product[] = [];
