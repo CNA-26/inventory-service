@@ -22,7 +22,7 @@ export const sendShippingEmail = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.EMAIL_SERVICE_API_KEY as string,
+        "X-API-Key": process.env.EMAIL_SERVICE_API_KEY as string,
       },
       body: JSON.stringify({
         email,
