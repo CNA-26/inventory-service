@@ -227,8 +227,7 @@ sendShippingEmail(
   console.error("Email failed but order processed", err)
 );
 
-
-    res.json({
+res.json({
       message: `Order ${orderId} processed for ${email} and email sent`,
     });
   } catch (error) {
