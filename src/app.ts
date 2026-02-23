@@ -3,10 +3,12 @@ import swaggerUi from "swagger-ui-express";
 import { AppError, errorHandler } from "./middlewares/errorHandler";
 import router from "./router";
 import swaggerSpec from "./swagger";
+import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 // Custom JSON parsing error handler
 app.use(
