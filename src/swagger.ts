@@ -6,7 +6,7 @@ const options = {
     info: {
       title: "Inventory Service API",
       version: "1.0.0",
-      description: "API documentation for the Inventory Service - BETA Version",
+      description: "API documentation for the Inventory Service",
     },
     components: {
       securitySchemes: {
