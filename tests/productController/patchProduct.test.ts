@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { patchProduct } from "../../src/controllers/productController";
 import { Product, products } from "../../src/models/product";
+import { sendShippingEmail } from "../../src/services/emailService";
+
+jest.mock("../../src/services/emailService");
+
 describe("patchProduct", () => {
   beforeEach(() => {
     products.length = 0; // Clear the products array before each test
@@ -37,7 +41,7 @@ describe("patchProduct", () => {
     } as unknown as Response;
 
     products.push(new Product("TESTSKU", 10));
-
+    
     patchProduct(req, res, jest.fn());
     expect(res.json).toHaveBeenCalledWith({
       sku: "TESTSKU",
@@ -175,7 +179,7 @@ describe("patchProduct", () => {
     });
   });
 
-  it("should send shipping notification email and return 200 for valid order update", () => {
+  it("should send shipping notification email and return 200 for valid order update", async () => {
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: -5, email: "test@example.com", orderId: "ORDER123" },
@@ -187,7 +191,12 @@ describe("patchProduct", () => {
 
     products.push(new Product("TESTSKU", 10));
 
-    patchProduct(req, res, jest.fn());
+     (sendShippingEmail as jest.Mock).mockResolvedValue({
+      message: "Email sent",
+    });
+
+    await patchProduct(req, res, jest.fn());
+
     expect(res.json).toHaveBeenCalledWith({
       message: "Order ORDER123 processed for test@example.com and email sent",
     });
