@@ -6,6 +6,7 @@ import {
   postProduct,
   putProduct,
 } from "../controllers/productController";
+import { authenticate } from "../middlewares/auth";
 
 const router = Router();
 
@@ -194,7 +195,7 @@ router.get("/:sku", getProductBySku);
  *       409:
  *         description: Product with this SKU already exists
  */
-router.post("/", postProduct);
+router.post("/", authenticate, postProduct);
 
 /**
  * @openapi
@@ -234,7 +235,7 @@ router.post("/", postProduct);
  *       404:
  *         description: Product not found
  */
-router.put("/:sku", putProduct);
+router.put("/:sku", authenticate, putProduct);
 
 /**
  * @openapi
@@ -293,6 +294,6 @@ router.put("/:sku", putProduct);
  *       404:
  *         description: Product not found
  */
-router.patch("/:sku", patchProduct);
+router.patch("/:sku", authenticate, patchProduct);
 
 export default router;

@@ -1,10 +1,9 @@
 import express from "express";
 import productRoutes from "./routes/productRoutes";
-import { authenticate } from "./middlewares/auth";
 
 const router = express.Router();
 
 // Apply authentication to all API routes
-router.use("/products", authenticate, productRoutes);
+router.use("/products", productRoutes);
 
 export default router;
