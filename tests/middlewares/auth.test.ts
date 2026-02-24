@@ -1,11 +1,15 @@
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-let authenticate: any;
+
+let authenticate: (req: Request, res: Response, next: NextFunction) => void;
 
 describe("Authentication Middleware", () => {
   beforeAll(() => {
     process.env.JWT_SECRET = "test-secret";
     jest.resetModules();
-    authenticate = require("../../src/middlewares/auth").authenticate;
+    authenticate = jest.requireActual(
+      "../../src/middlewares/auth",
+    ).authenticate;
   });
 
   beforeEach(() => {
@@ -16,11 +20,13 @@ describe("Authentication Middleware", () => {
     const token = jwt.sign({ role: "admin" }, "test-secret", {
       expiresIn: "1d",
     });
-    const req: any = { headers: { authorization: `Bearer ${token}` } };
-    const res: any = {
+    const req = {
+      headers: { authorization: `Bearer ${token}` },
+    } as unknown as Request;
+    const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    };
+    } as unknown as Response;
     const next = jest.fn();
 
     authenticate(req, res, next);
@@ -30,11 +36,11 @@ describe("Authentication Middleware", () => {
   });
 
   it("should return 401 if no token is provided", () => {
-    const req: any = { headers: { authorization: undefined } };
-    const res: any = {
+    const req = { headers: { authorization: undefined } } as unknown as Request;
+    const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    };
+    } as unknown as Response;
     const next = jest.fn();
 
     authenticate(req, res, next);
@@ -47,11 +53,13 @@ describe("Authentication Middleware", () => {
   });
 
   it("should return 403 if token is invalid", () => {
-    const req: any = { headers: { authorization: `Bearer invalidtoken` } };
-    const res: any = {
+    const req = {
+      headers: { authorization: `Bearer invalidtoken` },
+    } as unknown as Request;
+    const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    };
+    } as unknown as Response;
     const next = jest.fn();
 
     authenticate(req, res, next);
@@ -68,11 +76,13 @@ describe("Authentication Middleware", () => {
     const token = jwt.sign({ role: "user" }, "test-secret", {
       expiresIn: "1d",
     });
-    const req: any = { headers: { authorization: `Bearer ${token}` } };
-    const res: any = {
+    const req = {
+      headers: { authorization: `Bearer ${token}` },
+    } as unknown as Request;
+    const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    };
+    } as unknown as Response;
     const next = jest.fn();
     authenticate(req, res, next);
 

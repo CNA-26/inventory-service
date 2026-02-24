@@ -23,7 +23,7 @@ describe("putProduct", () => {
         updatedAt: new Date().toISOString(),
       }),
     };
-    mockFindBySku.mockResolvedValue(mockProduct as any);
+    mockFindBySku.mockResolvedValue(mockProduct as unknown as Product);
 
     const req = {
       params: { sku: "TESTSKU" },

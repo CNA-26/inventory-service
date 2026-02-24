@@ -17,15 +17,15 @@ describe("postProduct", () => {
       typeof Product.create
     >;
     mockFindBySku.mockResolvedValue(null);
-    
+
     const mockProduct = {
       getProductInfo: jest.fn().mockReturnValue({
         sku: "TESTSKU",
         quantity: 0,
         updatedAt: new Date().toISOString(),
       }),
-    };
-    mockCreate.mockResolvedValue(mockProduct as any);
+    } as unknown as Product;
+    mockCreate.mockResolvedValue(mockProduct);
 
     const req = {
       body: { sku: "TESTSKU" },
@@ -51,15 +51,15 @@ describe("postProduct", () => {
       typeof Product.create
     >;
     mockFindBySku.mockResolvedValue(null);
-    
+
     const mockProduct = {
       getProductInfo: jest.fn().mockReturnValue({
         sku: "TESTSKU",
         quantity: 10,
         updatedAt: new Date().toISOString(),
       }),
-    };
-    mockCreate.mockResolvedValue(mockProduct as any);
+    } as unknown as Product;
+    mockCreate.mockResolvedValue(mockProduct);
 
     const req = {
       body: { sku: "TESTSKU", quantity: 10 },
