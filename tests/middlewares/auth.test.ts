@@ -1,86 +1,84 @@
-import { Request, Response } from "express";
-import { authenticate } from "../../src/middlewares/auth";
+import jwt from "jsonwebtoken";
+let authenticate: any;
 
 describe("Authentication Middleware", () => {
-  const mockNext = jest.fn();
+  beforeAll(() => {
+    process.env.JWT_SECRET = "test-secret";
+    jest.resetModules();
+    authenticate = require("../../src/middlewares/auth").authenticate;
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("should call next() with valid X-API-Key header", () => {
-    const req = {
-      headers: {
-        'x-api-key': 'inventory-beta-key-2026'
-      }
-    } as unknown as Request;
-
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    } as unknown as Response;
-
-    authenticate(req, res, mockNext);
-
-    expect(mockNext).toHaveBeenCalled();
-    expect(res.status).not.toHaveBeenCalled();
-  });
-
   it("should call next() with valid Bearer token", () => {
-    const req = {
-      headers: {
-        'authorization': 'Bearer inventory-beta-key-2026'
-      }
-    } as unknown as Request;
-
-    const res = {
+    const token = jwt.sign({ role: "admin" }, "test-secret", {
+      expiresIn: "1d",
+    });
+    const req: any = { headers: { authorization: `Bearer ${token}` } };
+    const res: any = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    } as unknown as Response;
+      json: jest.fn(),
+    };
+    const next = jest.fn();
 
-    authenticate(req, res, mockNext);
+    authenticate(req, res, next);
 
-    expect(mockNext).toHaveBeenCalled();
+    expect(next).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("should return 401 when no API key is provided", () => {
-    const req = {
-      headers: {}
-    } as unknown as Request;
-
-    const res = {
+  it("should return 401 if no token is provided", () => {
+    const req: any = { headers: { authorization: undefined } };
+    const res: any = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    } as unknown as Response;
+      json: jest.fn(),
+    };
+    const next = jest.fn();
 
-    authenticate(req, res, mockNext);
+    authenticate(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'API key required. Use X-API-Key header or Authorization header'
+      message: "Token required. Please add it in the Authorization header",
     });
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("should return 403 with invalid API key", () => {
-    const req = {
-      headers: {
-        'x-api-key': 'invalid-key'
-      }
-    } as unknown as Request;
-
-    const res = {
+  it("should return 403 if token is invalid", () => {
+    const req: any = { headers: { authorization: `Bearer invalidtoken` } };
+    const res: any = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    } as unknown as Response;
+      json: jest.fn(),
+    };
+    const next = jest.fn();
 
-    authenticate(req, res, mockNext);
+    authenticate(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Invalid API key'
+      message: "Invalid or expired token",
     });
-    expect(mockNext).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // eturn res.status(403).json({ message: "Insufficient permissions" });
+  it("should return 403 for insufficient permissions", () => {
+    const token = jwt.sign({ role: "user" }, "test-secret", {
+      expiresIn: "1d",
+    });
+    const req: any = { headers: { authorization: `Bearer ${token}` } };
+    const res: any = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const next = jest.fn();
+    authenticate(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Insufficient permissions",
+    });
   });
 });

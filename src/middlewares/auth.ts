@@ -2,6 +2,10 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
 
+type DecodedToken = {
+  role: string;
+};
+
 export const authenticate = (
   req: Request,
   res: Response,
@@ -30,12 +34,13 @@ export const authenticate = (
       const newToken = jwt.sign({ role: "admin" }, config.jwtSecret, {
         expiresIn: "1d",
       });
-      console.log(newToken);
-      console.error("JWT verification failed:", err);
       return res.status(403).json({ message: "Invalid or expired token" });
     }
 
-    console.log("Authenticated user:", decoded);
+    if ((decoded as DecodedToken).role !== "admin") {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
     next();
   });
 };
