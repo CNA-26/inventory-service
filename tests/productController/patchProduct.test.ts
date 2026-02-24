@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { patchProduct } from "../../src/controllers/productController";
 import { Product } from "../../src/models/product";
+import { sendShippingEmail } from "../../src/services/emailService";
 
 jest.mock("../../src/models/product");
+jest.mock("../../src/services/emailService");
 
 describe("patchProduct", () => {
   beforeEach(() => {
@@ -67,10 +69,12 @@ describe("patchProduct", () => {
     } as unknown as Response;
 
     await patchProduct(req, res, jest.fn());
-    expect(res.json).toHaveBeenCalled();
-    const call = (res.json as jest.Mock).mock.calls[0][0];
-    expect(call.sku).toBe("TESTSKU");
-    expect(call.quantity).toBe(15);
+
+    expect(res.json).toHaveBeenCalledWith({
+      sku: "TESTSKU",
+      quantity: 15,
+      updatedAt: expect.any(String),
+    });
   });
 
   it("should return 404 if product does not exist", async () => {
@@ -212,7 +216,12 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
+    (sendShippingEmail as jest.Mock).mockResolvedValue({
+      message: "Email sent",
+    });
+
     await patchProduct(req, res, jest.fn());
+
     expect(res.json).toHaveBeenCalledWith({
       message: "Order ORDER123 processed for test@example.com and email sent",
     });

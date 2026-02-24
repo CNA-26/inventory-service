@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { Product } from "../models/product";
+import { sendShippingEmail } from "../services/emailService";
 
 /**
  * Checks if a product exists by sku.
@@ -201,6 +202,14 @@ export const patchProduct = async (
         message: `Insufficient stock to fulfill order ${orderId} for ${email}`,
       });
       return;
+    }
+
+    try {
+      await sendShippingEmail(email, orderId, `trackingNumber-${orderId}`);
+    } catch {
+      return res.status(502).json({
+        message: `Order ${orderId} could not be completed because email failed`,
+      });
     }
 
     product.setQuantity(product.getQuantity() + quantity);
