@@ -6,6 +6,7 @@ import {
   postProduct,
   putProduct,
 } from "../controllers/productController";
+import { authenticate } from "../middlewares/auth";
 
 const router = Router();
 
@@ -47,20 +48,6 @@ const router = Router();
  *         quantity:
  *           type: number
  *           example: 5
- *       required:
- *         - quantity
- *     ProductPatchRequest:
- *       type: object
- *       properties:
- *         quantity:
- *           type: number
- *           example: -5
- *         email:
- *           type: string
- *           example: "customer@example.com"
- *         orderId:
- *           type: string
- *           example: "ORD123456"
  *       required:
  *         - quantity
  *     ProductPatchDeltaRequest:
@@ -109,9 +96,6 @@ const router = Router();
  *     tags:
  *       - Products
  *     summary: List all products
- *     security:
- *       - ApiKeyAuth: []
- *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of products
@@ -135,9 +119,6 @@ router.get("/", getProducts);
  *     tags:
  *       - Products
  *     summary: Get product by SKU
- *     security:
- *       - ApiKeyAuth: []
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sku
@@ -170,7 +151,6 @@ router.get("/:sku", getProductBySku);
  *       - Products
  *     summary: Create a new product
  *     security:
- *       - ApiKeyAuth: []
  *       - BearerAuth: []
  *     requestBody:
  *       required: true
@@ -194,7 +174,7 @@ router.get("/:sku", getProductBySku);
  *       409:
  *         description: Product with this SKU already exists
  */
-router.post("/", postProduct);
+router.post("/", authenticate, postProduct);
 
 /**
  * @openapi
@@ -204,7 +184,6 @@ router.post("/", postProduct);
  *       - Products
  *     summary: Set product quantity
  *     security:
- *       - ApiKeyAuth: []
  *       - BearerAuth: []
  *     parameters:
  *       - in: path
@@ -234,7 +213,7 @@ router.post("/", postProduct);
  *       404:
  *         description: Product not found
  */
-router.put("/:sku", putProduct);
+router.put("/:sku", authenticate, putProduct);
 
 /**
  * @openapi
@@ -247,7 +226,6 @@ router.put("/:sku", putProduct);
  *       Updates product quantity by delta. If `email` and `orderId` are provided together, this is treated as an order-related update.
  *       For order-related updates, `quantity` must be negative and sufficient stock must exist.
  *     security:
- *       - ApiKeyAuth: []
  *       - BearerAuth: []
  *     parameters:
  *       - in: path
@@ -293,6 +271,6 @@ router.put("/:sku", putProduct);
  *       404:
  *         description: Product not found
  */
-router.patch("/:sku", patchProduct);
+router.patch("/:sku", authenticate, patchProduct);
 
 export default router;

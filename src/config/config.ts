@@ -5,7 +5,7 @@ dotenv.config();
 interface Config {
   port: number;
   nodeEnv: string;
-  apiKey: string;
+  jwtSecret: string;
   database: {
     host: string;
     port: number;
@@ -19,7 +19,7 @@ interface Config {
 const config: Config = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv: process.env.NODE_ENV || "development",
-  apiKey: process.env.API_KEY || "",
+  jwtSecret: process.env.JWT_SECRET || "",
   database: {
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 5432,

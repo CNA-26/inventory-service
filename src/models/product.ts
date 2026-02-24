@@ -26,25 +26,11 @@ export class Product implements ProductInterface {
   private sku: string;
   private updatedAt: Date;
 
-  // Support two constructor shapes:
-  // - DB-backed: new Product(id: number, sku: string, quantity: number, updatedAt: Date)
-  // - In-memory (tests): new Product(sku: string, quantity: number)
-  constructor(id: number, sku: string, quantity: number, updatedAt: Date);
-  constructor(sku: string, quantity: number);
-  constructor(a: number | string, b: string | number, c?: number, d?: Date) {
-    if (typeof a === "number") {
-      // DB-backed signature
-      this.id = a;
-      this.sku = b as string;
-      this.quantity = c as number;
-      this.updatedAt = d as Date;
-    } else {
-      // In-memory signature (tests)
-      this.id = -1;
-      this.sku = a;
-      this.quantity = (typeof b === "number" ? b : 0) as number;
-      this.updatedAt = new Date();
-    }
+  constructor(id: number, sku: string, quantity: number, updatedAt: Date) {
+    this.id = id;
+    this.sku = sku;
+    this.quantity = quantity;
+    this.updatedAt = updatedAt;
   }
 
   getQuantity(): number {
@@ -92,13 +78,18 @@ export class Product implements ProductInterface {
   }
 
   static async findAll(): Promise<Product[]> {
-    const query = "SELECT id, sku, quantity, updated_at FROM products ORDER BY id";
+    const query =
+      "SELECT id, sku, quantity, updated_at FROM products ORDER BY id";
     const result = await pool.query(query);
-    return result.rows.map((row: DbRow) => new Product(row.id, row.sku, row.quantity, new Date(row.updated_at)));
+    return result.rows.map(
+      (row: DbRow) =>
+        new Product(row.id, row.sku, row.quantity, new Date(row.updated_at)),
+    );
   }
 
   static async findBySku(sku: string): Promise<Product | null> {
-    const query = "SELECT id, sku, quantity, updated_at FROM products WHERE sku = $1";
+    const query =
+      "SELECT id, sku, quantity, updated_at FROM products WHERE sku = $1";
     const result = await pool.query(query, [sku]);
     if (result.rows.length === 0) {
       return null;
@@ -108,14 +99,16 @@ export class Product implements ProductInterface {
   }
 
   static async create(sku: string, quantity: number = 0): Promise<Product> {
-    const query = "INSERT INTO products (sku, quantity) VALUES ($1, $2) RETURNING id, sku, quantity, updated_at";
+    const query =
+      "INSERT INTO products (sku, quantity) VALUES ($1, $2) RETURNING id, sku, quantity, updated_at";
     const result = await pool.query(query, [sku, quantity]);
     const row = result.rows[0];
     return new Product(row.id, row.sku, row.quantity, new Date(row.updated_at));
   }
 
   async update(): Promise<void> {
-    const query = "UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2";
+    const query =
+      "UPDATE products SET quantity = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2";
     await pool.query(query, [this.quantity, this.id]);
     this.updatedAt = new Date();
   }
@@ -136,7 +129,3 @@ export class Product implements ProductInterface {
     }
   }
 }
-
-// Minimal in-memory products collection (test shim).
-// Kept intentionally small so CI/tests that rely on a `products` import keep working.
-export const products: Product[] = [];

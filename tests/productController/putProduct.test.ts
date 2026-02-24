@@ -1,12 +1,30 @@
 import { Request, Response } from "express";
 import { putProduct } from "../../src/controllers/productController";
-import { Product, products } from "../../src/models/product";
+import { Product } from "../../src/models/product";
+
+jest.mock("../../src/models/product");
+
 describe("putProduct", () => {
   beforeEach(() => {
-    products.length = 0; // Clear the products array before each test
+    jest.clearAllMocks();
   });
 
-  it("should update the quantity of an existing product and return it", () => {
+  it("should update the quantity of an existing product and return it", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    const mockProduct = {
+      getQuantity: jest.fn().mockReturnValue(10),
+      setQuantity: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      getProductInfo: jest.fn().mockReturnValue({
+        sku: "TESTSKU",
+        quantity: 15,
+        updatedAt: new Date().toISOString(),
+      }),
+    };
+    mockFindBySku.mockResolvedValue(mockProduct as unknown as Product);
+
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: 15 },
@@ -16,17 +34,19 @@ describe("putProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    putProduct(req, res, jest.fn());
-    expect(res.json).toHaveBeenCalledWith({
-      sku: "TESTSKU",
-      quantity: 15,
-      updatedAt: products[0].getUpdatedAt().toISOString(),
-    });
+    await putProduct(req, res, jest.fn());
+    expect(res.json).toHaveBeenCalled();
+    const call = (res.json as jest.Mock).mock.calls[0][0];
+    expect(call.sku).toBe("TESTSKU");
+    expect(call.quantity).toBe(15);
   });
 
-  it("should return 404 if product does not exist", () => {
+  it("should return 404 if product does not exist", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    mockFindBySku.mockResolvedValue(null);
+
     const req = {
       params: { sku: "NONEXISTENTSKU" },
       body: { quantity: 15 },
@@ -36,14 +56,19 @@ describe("putProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    putProduct(req, res, jest.fn());
+    await putProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       message: "Product not found",
     });
   });
 
-  it("should return 400 if quantity is missing or not a number", () => {
+  it("should return 400 if quantity is missing or not a number", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    mockFindBySku.mockResolvedValue(new Product(1, "TESTSKU", 10, new Date()));
+
     const req = {
       params: { sku: "TESTSKU" },
       body: {},
@@ -53,16 +78,14 @@ describe("putProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    putProduct(req, res, jest.fn());
+    await putProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "quantity is required in body and must be a number",
     });
   });
 
-  it("should return 400 if sku parameter is missing", () => {
+  it("should return 400 if sku parameter is missing", async () => {
     const req = {
       params: {},
       body: { quantity: 15 },
@@ -72,7 +95,7 @@ describe("putProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    putProduct(req, res, jest.fn());
+    await putProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "sku parameter is required",

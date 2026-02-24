@@ -5,19 +5,6 @@
 - API https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/api/
 - Swagger Documentation: https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/docs
 
-## Authentication
-
-This service uses API key authentication for all endpoints. Include one of the following in your requests:
-
-**Header options:**
-- `X-API-Key: inventory-beta-key-2026`
-- `Authorization: Bearer inventory-beta-key-2026`
-
-**Example with curl:**
-```bash
-curl -H "X-API-Key: inventory-beta-key-2026" https://inventory-service-cna26-inventoryservice.2.rahtiapp.fi/api/products
-```
-
 ## Local development
 
 ```sh

@@ -1,33 +1,48 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import config from "../config/config";
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  // If no API key is configured, allow a well-known test key when running tests,
-  // otherwise skip authentication (for development).
-  const fallbackTestKey = process.env.NODE_ENV === 'test' ? 'inventory-beta-key-2026' : undefined;
-  const configuredKey = config.apiKey && config.apiKey.trim() !== '' ? config.apiKey : fallbackTestKey;
-  if (!configuredKey) {
-    return next();
+type DecodedToken = {
+  role: string;
+};
+
+export const authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!config.jwtSecret) {
+    return res.status(500).json({
+      message: "JWT secret not configured. Please yell at the developer.",
+    });
   }
 
-  const apiKey = req.headers['x-api-key'] || req.headers['authorization'];
+  const authHeader = req.headers["authorization"];
 
-  if (!apiKey) {
+  if (!authHeader) {
     return res.status(401).json({
-      message: 'API key required. Use X-API-Key header or Authorization header'
+      message: "Token required. Please add it in the Authorization header",
     });
   }
 
-  // Check if it's a Bearer token or direct API key
-  const providedKey = typeof apiKey === 'string' && apiKey.startsWith('Bearer ')
-    ? apiKey.substring(7)
-    : apiKey;
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : authHeader;
 
-  if (providedKey !== configuredKey) {
-    return res.status(403).json({
-      message: 'Invalid API key'
-    });
-  }
+  jwt.verify(token, config.jwtSecret, (err, decoded) => {
+    if (err) {
+      const newToken = jwt.sign({ role: "admin" }, config.jwtSecret, {
+        expiresIn: "1d",
+      });
+      console.log("Generated new token for testing purposes:", newToken);
 
-  next();
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+
+    if ((decoded as DecodedToken).role !== "admin") {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    next();
+  });
 };

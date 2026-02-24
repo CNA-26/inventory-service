@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Product, products as inMemoryProducts } from "../models/product";
+import { Product } from "../models/product";
 
 /**
  * Checks if a product exists by sku.
@@ -32,19 +32,6 @@ export const postProduct = async (
       return;
     }
 
-    // If in-memory products (test shim) are present, operate synchronously
-    if (Array.isArray(inMemoryProducts)) {
-      if (inMemoryProducts.some((p) => p.getSku() === sku)) {
-        res.status(409).json({ message: "Product with this sku already exists" });
-        return;
-      }
-      const qty = quantity !== undefined ? quantity : 0;
-  const p = new Product(sku, qty);
-  inMemoryProducts.push(p);
-      res.status(201).json(p.getProductInfo());
-      return;
-    }
-
     if (await doesProductExist(sku)) {
       res.status(409).json({ message: "Product with this sku already exists" });
       return;
@@ -64,10 +51,6 @@ export const getProducts = async (
   next: NextFunction,
 ) => {
   try {
-    if (Array.isArray(inMemoryProducts)) {
-      res.json(inMemoryProducts.map((p) => p.getProductInfo()));
-      return;
-    }
     const products = await Product.findAll();
     res.json(products.map((product) => product.getProductInfo()));
   } catch (error) {
@@ -90,16 +73,6 @@ export const getProductBySku = async (
       return;
     }
 
-    if (Array.isArray(inMemoryProducts)) {
-      const product = inMemoryProducts.find((p) => p.getSku() === skuParam);
-      if (!product) {
-        res.status(404).json({ message: "Product not found" });
-        return;
-      }
-      res.json(product.getProductInfo());
-      return;
-    }
-
     const product = await Product.findBySku(skuParam);
     if (!product) {
       res.status(404).json({ message: "Product not found" });
@@ -112,7 +85,11 @@ export const getProductBySku = async (
 };
 
 // set quantity of a product
-export const putProduct = async (req: Request, res: Response, next: NextFunction) => {
+export const putProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const skuParam = Array.isArray(req.params.sku)
       ? req.params.sku[0]
@@ -126,17 +103,6 @@ export const putProduct = async (req: Request, res: Response, next: NextFunction
       res
         .status(400)
         .json({ message: "quantity is required in body and must be a number" });
-      return;
-    }
-
-    if (Array.isArray(inMemoryProducts)) {
-      const product = inMemoryProducts.find((p) => p.getSku() === skuParam);
-      if (!product) {
-        res.status(404).json({ message: "Product not found" });
-        return;
-      }
-      product.setQuantity(quantity);
-      res.json(product.getProductInfo());
       return;
     }
 
@@ -181,82 +147,6 @@ export const patchProduct = async (
         .json({ message: "quantity must be a non-zero number in body" });
       return;
     }
-
-    // In-memory flow
-    if (Array.isArray(inMemoryProducts)) {
-      const product = inMemoryProducts.find((p) => p.getSku() === skuParam);
-      if (!product) {
-        res.status(404).json({ message: "Product not found" });
-        return;
-      }
-
-      if (email !== undefined && typeof email !== "string") {
-        res
-          .status(400)
-          .json({ message: "email must be a string if provided in body" });
-        return;
-      }
-
-      if (orderId !== undefined && typeof orderId !== "string") {
-        res
-          .status(400)
-          .json({ message: "orderId must be a string if provided in body" });
-        return;
-      }
-
-      // if email is provided but orderId is not, or vice versa, return 400
-      if (
-        (email !== undefined && orderId === undefined) ||
-        (email === undefined && orderId !== undefined)
-      ) {
-        res.status(400).json({
-          message: "Both email and orderId must be provided for order updates",
-        });
-        return;
-      }
-
-      // if email is provided and orderId is provided its an order related update
-      let orderRelatedUpdate = false;
-      if (email !== undefined && orderId !== undefined) {
-        orderRelatedUpdate = true;
-      }
-
-      // if quantity is positive and order related update, return 400
-      if (quantity > 0 && orderRelatedUpdate) {
-        res.status(400).json({
-          message: `If quantity is positive, email and orderId should not be provided`,
-        });
-        return;
-      }
-
-      // if not order related update, just update quantity
-      if (!orderRelatedUpdate) {
-        product.setQuantity(product.getQuantity() + quantity);
-        res.json(product.getProductInfo());
-        return;
-      }
-
-      // check for sufficient stock
-      if (product.getQuantity() + quantity < 0) {
-        res.status(400).json({
-          message: `Insufficient stock to fulfill order ${orderId} for ${email}`,
-        });
-        return;
-      }
-
-      product.setQuantity(product.getQuantity() + quantity);
-
-      /**
-       * SEND SHIPPING NOTIFICATION EMAIL
-       */
-
-      res.json({
-        message: `Order ${orderId} processed for ${email} and email sent`,
-      });
-      return;
-    }
-
-    // DB-backed flow
     const product = await Product.findBySku(skuParam);
     if (!product) {
       res.status(404).json({ message: "Product not found" });
