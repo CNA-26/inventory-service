@@ -31,7 +31,7 @@ export const authenticate = (
 
   jwt.verify(token, config.jwtSecret, (err, decoded) => {
     if (err) {
-      const newToken = jwt.sign({ role: "admin" }, config.jwtSecret, {
+      const newToken = jwt.sign({ role: "ADMIN" }, config.jwtSecret, {
         expiresIn: "1d",
       });
       console.log("Generated new token for testing purposes:", newToken);
@@ -39,7 +39,7 @@ export const authenticate = (
       return res.status(403).json({ message: "Invalid or expired token" });
     }
 
-    if ((decoded as DecodedToken).role !== "admin") {
+    if ((decoded as DecodedToken).role !== "ADMIN") {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 

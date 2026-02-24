@@ -17,7 +17,7 @@ describe("Authentication Middleware", () => {
   });
 
   it("should call next() with valid Bearer token", () => {
-    const token = jwt.sign({ role: "admin" }, "test-secret", {
+    const token = jwt.sign({ role: "ADMIN" }, "test-secret", {
       expiresIn: "1d",
     });
     const req = {
