@@ -34,6 +34,8 @@ export const authenticate = (
       const newToken = jwt.sign({ role: "admin" }, config.jwtSecret, {
         expiresIn: "1d",
       });
+      console.log("Generated new token for testing purposes:", newToken);
+
       return res.status(403).json({ message: "Invalid or expired token" });
     }
 
