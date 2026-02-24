@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Product, products } from "../models/product";
+import { sendShippingEmail } from "../services/emailService";
+
 
 /**
  * Returns the index of a product in the products array based on its sku.
@@ -124,7 +126,7 @@ export const putProduct = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // update quantity of a product
-export const patchProduct = (
+export const patchProduct = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -212,11 +214,20 @@ export const patchProduct = (
       return;
     }
 
-    products[productIndex].updateQuantity(quantity);
+  
+ try {
+      await sendShippingEmail(
+        email,
+        orderId,
+        `trackingNumber-${orderId}`
+      );
+    } catch {
+      return res.status(502).json({
+        message: `Order ${orderId} could not be completed because email failed`,
+      });
+    }
 
-    /**
-     * SEND SHIPPING NOTIFICATION EMAIL
-     */
+    products[productIndex].updateQuantity(quantity);
 
     res.json({
       message: `Order ${orderId} processed for ${email} and email sent`,
