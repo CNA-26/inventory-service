@@ -214,20 +214,22 @@ export const patchProduct = async (
       return;
     }
 
+  
+ try {
+      await sendShippingEmail(
+        email,
+        orderId,
+        `trackingNumber-${orderId}`
+      );
+    } catch (err) {
+      return res.status(502).json({
+        message: `Order ${orderId} could not be completed because email failed`,
+      });
+    }
+
     products[productIndex].updateQuantity(quantity);
 
-   
-
-// Sending shipping notification email, order succeeds even if email service is offline
-sendShippingEmail(
-  email,
-  orderId,
-  `trackingNumber-${orderId}`
-).catch((err) =>
-  console.error("Email failed but order processed", err)
-);
-
-res.json({
+    res.json({
       message: `Order ${orderId} processed for ${email} and email sent`,
     });
   } catch (error) {
