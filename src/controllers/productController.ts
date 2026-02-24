@@ -221,7 +221,7 @@ export const patchProduct = async (
         orderId,
         `trackingNumber-${orderId}`
       );
-    } catch (err) {
+    } catch (_err) {
       return res.status(502).json({
         message: `Order ${orderId} could not be completed because email failed`,
       });
