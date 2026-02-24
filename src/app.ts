@@ -4,10 +4,12 @@ import { AppError, errorHandler } from "./middlewares/errorHandler";
 import router from "./router";
 import swaggerSpec from "./swagger";
 import { Product } from "./models/product";
+import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 // Initialize database
 const initializeDatabase = async () => {
