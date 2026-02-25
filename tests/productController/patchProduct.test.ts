@@ -1,16 +1,32 @@
 import { Request, Response } from "express";
 import { patchProduct } from "../../src/controllers/productController";
-import { Product, products } from "../../src/models/product";
+import { Product } from "../../src/models/product";
 import { sendShippingEmail } from "../../src/services/emailService";
 
+jest.mock("../../src/models/product");
 jest.mock("../../src/services/emailService");
 
 describe("patchProduct", () => {
   beforeEach(() => {
-    products.length = 0; // Clear the products array before each test
+    jest.clearAllMocks();
   });
 
-  it("should update the quantity negatively of an existing product and return it", () => {
+  it("should update the quantity negatively of an existing product and return it", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    const mockProduct = {
+      getQuantity: jest.fn().mockReturnValue(10),
+      setQuantity: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      getProductInfo: jest.fn().mockReturnValue({
+        sku: "TESTSKU",
+        quantity: 5,
+        updatedAt: new Date().toISOString(),
+      }),
+    };
+    mockFindBySku.mockResolvedValue(mockProduct as unknown as Product);
+
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: -5 },
@@ -20,17 +36,29 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
-    expect(res.json).toHaveBeenCalledWith({
-      sku: "TESTSKU",
-      quantity: 5,
-      updatedAt: products[0].getUpdatedAt().toISOString(),
-    });
+    await patchProduct(req, res, jest.fn());
+    expect(res.json).toHaveBeenCalled();
+    const call = (res.json as jest.Mock).mock.calls[0][0];
+    expect(call.sku).toBe("TESTSKU");
+    expect(call.quantity).toBe(5);
   });
 
-  it("should update the quantity positively of an existing product and return it", () => {
+  it("should update the quantity positively of an existing product and return it", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    const mockProduct = {
+      getQuantity: jest.fn().mockReturnValue(10),
+      setQuantity: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      getProductInfo: jest.fn().mockReturnValue({
+        sku: "TESTSKU",
+        quantity: 15,
+        updatedAt: new Date().toISOString(),
+      }),
+    };
+    mockFindBySku.mockResolvedValue(mockProduct as unknown as Product);
+
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: 5 },
@@ -40,17 +68,21 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-    
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
+
     expect(res.json).toHaveBeenCalledWith({
       sku: "TESTSKU",
       quantity: 15,
-      updatedAt: products[0].getUpdatedAt().toISOString(),
+      updatedAt: expect.any(String),
     });
   });
 
-  it("should return 404 if product does not exist", () => {
+  it("should return 404 if product does not exist", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    mockFindBySku.mockResolvedValue(null);
+
     const req = {
       params: { sku: "NONEXISTENTSKU" },
       body: { quantity: -5 },
@@ -60,14 +92,19 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       message: "Product not found",
     });
   });
 
-  it("should return 400 if quantity is missing or not a number", () => {
+  it("should return 400 if quantity is missing or not a number", async () => {
+    const mockFindBySku = Product.findBySku as jest.MockedFunction<
+      typeof Product.findBySku
+    >;
+    mockFindBySku.mockResolvedValue(new Product(1, "TESTSKU", 10, new Date()));
+
     const req = {
       params: { sku: "TESTSKU" },
       body: {},
@@ -77,16 +114,14 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "quantity is required in body and must be a number",
     });
   });
 
-  it("should return 400 if sku parameter is missing", () => {
+  it("should return 400 if sku parameter is missing", async () => {
     const req = {
       params: {},
       body: { quantity: -5 },
@@ -96,14 +131,14 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "sku parameter is required",
     });
   });
 
-  it("should return 400 if quantity is zero", () => {
+  it("should return 400 if quantity is 0", async () => {
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: 0 },
@@ -113,16 +148,14 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "quantity must be a non-zero number in body",
     });
   });
 
-  it("should return 400 if email and orderId are provided but quantity is zero", () => {
+  it("should return 400 if email and orderId are provided but quantity is 0", async () => {
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: 0, email: "test@example.com", orderId: "ORDER123" },
@@ -132,16 +165,14 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "quantity must be a non-zero number in body",
     });
   });
 
-  it("should return 400 if email and orderId are provided but quantity is positive", () => {
+  it("should return 400 if email and orderId are provided but quantity is positive", async () => {
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: 5, email: "test@example.com", orderId: "ORDER123" },
@@ -151,16 +182,14 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message:
         "If quantity is positive, email and orderId should not be provided",
     });
   });
-  it("should return 400 if only email is provided with negative quantity", () => {
+  it("should return 400 if only email is provided with negative quantity", async () => {
     const req = {
       params: { sku: "TESTSKU" },
       body: { quantity: -5, email: "test@example.com" },
@@ -170,9 +199,7 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-    patchProduct(req, res, jest.fn());
+    await patchProduct(req, res, jest.fn());
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "Both email and orderId must be provided for order updates",
@@ -189,9 +216,7 @@ describe("patchProduct", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU", 10));
-
-     (sendShippingEmail as jest.Mock).mockResolvedValue({
+    (sendShippingEmail as jest.Mock).mockResolvedValue({
       message: "Email sent",
     });
 

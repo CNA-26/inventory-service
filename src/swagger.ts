@@ -8,6 +8,16 @@ const options = {
       version: "1.0.0",
       description: "API documentation for the Inventory Service",
     },
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          description:
+            "Bearer token authentication. Token must include role: 'ADMIN' to authenticate.",
+        },
+      },
+    },
   },
   apis: ["src/routes/*.ts"],
 };

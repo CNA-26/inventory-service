@@ -4,14 +4,14 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("Product class", () => {
   it("should create a product with the correct properties", () => {
-    const product = new Product("TESTSKU", 10);
+    const product = new Product(1, "TESTSKU", 10, new Date());
     expect(product.getSku()).toBe("TESTSKU");
     expect(product.getQuantity()).toBe(10);
     expect(product.getUpdatedAt()).toBeInstanceOf(Date);
   });
 
   it("should update quantity positively and updatedAt when updateQuantity is called", async () => {
-    const product = new Product("TESTSKU", 10);
+    const product = new Product(1, "TESTSKU", 10, new Date());
     const originalUpdatedAt = product.getUpdatedAt();
     await wait(10);
     product.updateQuantity(5);
@@ -23,7 +23,7 @@ describe("Product class", () => {
   });
 
   it("should update quantity negatively and updatedAt when updateQuantity is called", async () => {
-    const product = new Product("TESTSKU", 10);
+    const product = new Product(1, "TESTSKU", 10, new Date());
     const originalUpdatedAt = product.getUpdatedAt();
     await wait(10);
     product.updateQuantity(-3);
@@ -35,7 +35,7 @@ describe("Product class", () => {
   });
 
   it("should set quantity and updatedAt when setQuantity is called", async () => {
-    const product = new Product("TESTSKU", 10);
+    const product = new Product(1, "TESTSKU", 10, new Date());
     const originalUpdatedAt = product.getUpdatedAt();
     await wait(10);
     product.setQuantity(20);
@@ -47,7 +47,7 @@ describe("Product class", () => {
   });
 
   it("should return correct product info", () => {
-    const product = new Product("TESTSKU", 10);
+    const product = new Product(1, "TESTSKU", 10, new Date());
     const info = product.getProductInfo();
     expect(info).toHaveProperty("sku", "TESTSKU");
     expect(info).toHaveProperty("quantity", 10);

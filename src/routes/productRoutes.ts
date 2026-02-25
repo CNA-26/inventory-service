@@ -6,6 +6,7 @@ import {
   postProduct,
   putProduct,
 } from "../controllers/productController";
+import { authenticate } from "../middlewares/auth";
 
 const router = Router();
 
@@ -47,20 +48,6 @@ const router = Router();
  *         quantity:
  *           type: number
  *           example: 5
- *       required:
- *         - quantity
- *     ProductPatchRequest:
- *       type: object
- *       properties:
- *         quantity:
- *           type: number
- *           example: -5
- *         email:
- *           type: string
- *           example: "customer@example.com"
- *         orderId:
- *           type: string
- *           example: "ORD123456"
  *       required:
  *         - quantity
  *     ProductPatchDeltaRequest:
@@ -118,6 +105,10 @@ const router = Router();
  *               type: array
  *               items:
  *                 $ref: "#/components/schemas/Product"
+ *       401:
+ *         description: API key required
+ *       403:
+ *         description: Invalid API key
  */
 router.get("/", getProducts);
 
@@ -143,6 +134,10 @@ router.get("/", getProducts);
  *               $ref: "#/components/schemas/Product"
  *       400:
  *         description: Missing SKU parameter
+ *       401:
+ *         description: API key required
+ *       403:
+ *         description: Invalid API key
  *       404:
  *         description: Product not found
  */
@@ -155,6 +150,8 @@ router.get("/:sku", getProductBySku);
  *     tags:
  *       - Products
  *     summary: Create a new product
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -170,10 +167,14 @@ router.get("/:sku", getProductBySku);
  *               $ref: "#/components/schemas/Product"
  *       400:
  *         description: Invalid request body
+ *       401:
+ *         description: API key required
+ *       403:
+ *         description: Invalid API key
  *       409:
  *         description: Product with this SKU already exists
  */
-router.post("/", postProduct);
+router.post("/", authenticate, postProduct);
 
 /**
  * @openapi
@@ -182,6 +183,8 @@ router.post("/", postProduct);
  *     tags:
  *       - Products
  *     summary: Set product quantity
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sku
@@ -203,10 +206,14 @@ router.post("/", postProduct);
  *               $ref: "#/components/schemas/Product"
  *       400:
  *         description: Invalid request body or missing SKU parameter
+ *       401:
+ *         description: API key required
+ *       403:
+ *         description: Invalid API key
  *       404:
  *         description: Product not found
  */
-router.put("/:sku", putProduct);
+router.put("/:sku", authenticate, putProduct);
 
 /**
  * @openapi
@@ -218,6 +225,8 @@ router.put("/:sku", putProduct);
  *     description: |
  *       Updates product quantity by delta. If `email` and `orderId` are provided together, this is treated as an order-related update.
  *       For order-related updates, `quantity` must be negative and sufficient stock must exist.
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sku
@@ -255,9 +264,13 @@ router.put("/:sku", putProduct);
  *                 - $ref: "#/components/schemas/OrderUpdateResponse"
  *       400:
  *         description: Invalid request body, missing SKU parameter, quantity is zero, email/orderId mismatch, or insufficient stock
+ *       401:
+ *         description: API key required
+ *       403:
+ *         description: Invalid API key
  *       404:
  *         description: Product not found
  */
-router.patch("/:sku", patchProduct);
+router.patch("/:sku", authenticate, patchProduct);
 
 export default router;

@@ -3,12 +3,28 @@ import swaggerUi from "swagger-ui-express";
 import { AppError, errorHandler } from "./middlewares/errorHandler";
 import router from "./router";
 import swaggerSpec from "./swagger";
+import { Product } from "./models/product";
 import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+// Initialize database
+const initializeDatabase = async () => {
+  try {
+    await Product.createTable();
+    await Product.seedInitialData();
+    console.log("Database initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+    process.exit(1);
+  }
+};
+
+// Initialize database on startup
+initializeDatabase();
 
 // Custom JSON parsing error handler
 app.use(

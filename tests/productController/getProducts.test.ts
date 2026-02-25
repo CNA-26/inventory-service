@@ -1,42 +1,44 @@
 import { Request, Response } from "express";
 import { getProducts } from "../../src/controllers/productController";
-import { Product, products } from "../../src/models/product";
+import { Product } from "../../src/models/product";
+
+// Mock the database operations
+jest.mock("../../src/models/product");
 
 describe("getProducts", () => {
   beforeEach(() => {
-    products.length = 0; // Clear the products array before each test
+    jest.clearAllMocks();
   });
-  it("should return an empty array when no products exist", () => {
+
+  it("should return an empty array when no products exist", async () => {
+    const mockFindAll = Product.findAll as jest.MockedFunction<typeof Product.findAll>;
+    mockFindAll.mockResolvedValue([]);
+
     const req = {} as Request;
     const res = {
       json: jest.fn(),
     } as unknown as Response;
 
-    getProducts(req, res, jest.fn());
+    await getProducts(req, res, jest.fn());
     expect(res.json).toHaveBeenCalledWith([]);
   });
 
-  it("should return an array of products when multiple products exist", () => {
+  it("should return an array of products when multiple products exist", async () => {
+    const mockProduct1 = new Product(1, "TESTSKU1", 10, new Date());
+    const mockProduct2 = new Product(2, "TESTSKU2", 20, new Date());
+
+    const mockFindAll = Product.findAll as jest.MockedFunction<typeof Product.findAll>;
+    mockFindAll.mockResolvedValue([mockProduct1, mockProduct2]);
+
     const req = {} as Request;
     const res = {
       json: jest.fn(),
     } as unknown as Response;
 
-    products.push(new Product("TESTSKU1", 10));
-    products.push(new Product("TESTSKU2", 20));
-
-    getProducts(req, res, jest.fn());
+    await getProducts(req, res, jest.fn());
     expect(res.json).toHaveBeenCalledWith([
-      {
-        sku: "TESTSKU1",
-        quantity: 10,
-        updatedAt: products[0].getUpdatedAt().toISOString(),
-      },
-      {
-        sku: "TESTSKU2",
-        quantity: 20,
-        updatedAt: products[1].getUpdatedAt().toISOString(),
-      },
+      mockProduct1.getProductInfo(),
+      mockProduct2.getProductInfo(),
     ]);
   });
 });
