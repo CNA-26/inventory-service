@@ -13,7 +13,8 @@ const options = {
         BearerAuth: {
           type: "http",
           scheme: "bearer",
-          description: "Bearer token authentication.",
+          description:
+            "Bearer token authentication. Token must include role: 'ADMIN' to authenticate.",
         },
       },
     },
