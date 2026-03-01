@@ -53,7 +53,10 @@ export const getProducts = async (
 ) => {
   try {
     const products = await Product.findAll();
-    res.json(products.map((product) => product.getProductInfo()));
+    const publicProducts = products
+      .map((product) => product.getPublicProductInfo())
+      .filter((productInfo) => productInfo !== null);
+    res.json(publicProducts);
   } catch (error) {
     next(error);
   }
