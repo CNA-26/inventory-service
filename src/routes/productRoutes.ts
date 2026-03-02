@@ -14,6 +14,25 @@ const router = Router();
  * @openapi
  * components:
  *   schemas:
+ *     ObfuscatedProduct:
+ *       type: object
+ *       properties:
+ *         sku:
+ *           type: string
+ *           example: "ABC123"
+ *         quantity:
+ *           type: number
+ *           description: Obfuscated stock level (1 = 1-10 items, 2 = more than 10 items). Only in-stock products are returned.
+ *           enum: [1, 2]
+ *           example: 1
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2026-02-09T10:00:00.000Z"
+ *       required:
+ *         - sku
+ *         - quantity
+ *         - updatedAt
  *     Product:
  *       type: object
  *       properties:
@@ -96,19 +115,21 @@ const router = Router();
  *     tags:
  *       - Products
  *     summary: List all products
+ *     description: |
+ *       Returns a list of all products that are currently in stock.
+ *       Out of stock products (quantity <= 0) are filtered out and not returned.
+ *       The quantity field is obfuscated for privacy and represents stock levels:
+ *       - 1: Low stock (1-10 items available)
+ *       - 2: Good stock (more than 10 items available)
  *     responses:
  *       200:
- *         description: List of products
+ *         description: List of products in stock with obfuscated inventory status
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: "#/components/schemas/Product"
- *       401:
- *         description: API key required
- *       403:
- *         description: Invalid API key
+ *                 $ref: "#/components/schemas/ObfuscatedProduct"
  */
 router.get("/", getProducts);
 
@@ -119,6 +140,8 @@ router.get("/", getProducts);
  *     tags:
  *       - Products
  *     summary: Get product by SKU
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sku
@@ -141,7 +164,7 @@ router.get("/", getProducts);
  *       404:
  *         description: Product not found
  */
-router.get("/:sku", getProductBySku);
+router.get("/:sku", authenticate, getProductBySku);
 
 /**
  * @openapi

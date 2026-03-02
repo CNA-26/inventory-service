@@ -11,7 +11,9 @@ describe("getProducts", () => {
   });
 
   it("should return an empty array when no products exist", async () => {
-    const mockFindAll = Product.findAll as jest.MockedFunction<typeof Product.findAll>;
+    const mockFindAll = Product.findAll as jest.MockedFunction<
+      typeof Product.findAll
+    >;
     mockFindAll.mockResolvedValue([]);
 
     const req = {} as Request;
@@ -27,7 +29,9 @@ describe("getProducts", () => {
     const mockProduct1 = new Product(1, "TESTSKU1", 10, new Date());
     const mockProduct2 = new Product(2, "TESTSKU2", 20, new Date());
 
-    const mockFindAll = Product.findAll as jest.MockedFunction<typeof Product.findAll>;
+    const mockFindAll = Product.findAll as jest.MockedFunction<
+      typeof Product.findAll
+    >;
     mockFindAll.mockResolvedValue([mockProduct1, mockProduct2]);
 
     const req = {} as Request;
@@ -37,8 +41,26 @@ describe("getProducts", () => {
 
     await getProducts(req, res, jest.fn());
     expect(res.json).toHaveBeenCalledWith([
-      mockProduct1.getProductInfo(),
-      mockProduct2.getProductInfo(),
+      mockProduct1.getPublicProductInfo(),
+      mockProduct2.getPublicProductInfo(),
     ]);
+  });
+
+  it("should return an empty array if all the products have zero quantity", async () => {
+    const mockProduct1 = new Product(1, "TESTSKU1", 0, new Date());
+    const mockProduct2 = new Product(2, "TESTSKU2", 0, new Date());
+
+    const mockFindAll = Product.findAll as jest.MockedFunction<
+      typeof Product.findAll
+    >;
+    mockFindAll.mockResolvedValue([mockProduct1, mockProduct2]);
+
+    const req = {} as Request;
+    const res = {
+      json: jest.fn(),
+    } as unknown as Response;
+
+    await getProducts(req, res, jest.fn());
+    expect(res.json).toHaveBeenCalledWith([]);
   });
 });
