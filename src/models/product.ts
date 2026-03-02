@@ -64,6 +64,24 @@ export class Product implements ProductInterface {
     };
   }
 
+  /*
+   * Filters out products with quantity <= 0
+   * Maps quantity to: 1 (low stock, 1-10) or 2 (in stock, >10)
+   */
+  getPublicProductInfo(): ProductInfo | null {
+    if (this.quantity <= 0) {
+      return null;
+    }
+
+    const obfuscatedQuantity = this.quantity <= 10 ? 1 : 2;
+
+    return {
+      sku: this.sku,
+      quantity: obfuscatedQuantity,
+      updatedAt: this.updatedAt.toISOString(),
+    };
+  }
+
   // Database operations
   static async createTable(): Promise<void> {
     const query = `
